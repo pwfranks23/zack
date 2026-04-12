@@ -2,3 +2,4 @@ gymnasium[classic-control]
 pygame
 torch
 numpy
+mlflow

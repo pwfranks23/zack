@@ -2,4 +2,11 @@
 .pytest_cache/
 
 # Training checkpoints
+/checkpoints/
 *.pt
+
+# MLflow tracking
+mlruns/
+
+# Agent instructions
+copilot-instructions.md
