@@ -1,2 +1,5 @@
 *.pyc
 .pytest_cache/
+
+# Training checkpoints
+*.pt

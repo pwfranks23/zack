@@ -1,6 +1,12 @@
 # python3 -m cartpole_demo
 import gymnasium as gym
 import numpy as np
+import torch
+
+from model import PolicyNetwork
+
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+MODEL_PATH = "checkpoints/model_final.pt"
 
 env = gym.make("CartPole-v1", render_mode="human")
 
@@ -10,10 +16,20 @@ MAX_ANGULAR_VEL_KICK = 0.25
 MAX_CART_VEL_KICK = 0.15
 
 
-def choose_action(observation):
-  cart_pos, cart_vel, pole_angle, pole_ang_vel = observation
-  score = pole_angle + 0.5 * pole_ang_vel + 0.05 * cart_pos + 0.1 * cart_vel
-  return 1 if score > 0 else 0
+def load_model():
+  model = PolicyNetwork().to(DEVICE)
+  model.load_state_dict(torch.load(MODEL_PATH, map_location=DEVICE))
+  model.eval()
+  return model
+
+
+def choose_action(model, observation):
+  state_tensor = torch.FloatTensor(observation).unsqueeze(0).to(DEVICE)
+  with torch.no_grad():
+    logits = model(state_tensor)
+    probs = torch.softmax(logits, dim=-1)
+    action = probs.argmax(dim=-1).item()
+  return action
 
 
 def apply_disturbance_if_needed(environment, step_number):
@@ -41,7 +57,9 @@ def apply_disturbance_if_needed(environment, step_number):
 
 
 # Reset environment to start a new episode
+model = load_model()
 observation, info = env.reset()
+print(f'Model loaded from {MODEL_PATH}')
 
 print(f"Starting observation: {observation}")
 
@@ -50,7 +68,7 @@ total_reward = 0
 step = 0
 
 while not episode_over:
-  action = choose_action(observation)
+  action = choose_action(model, observation)
 
   observation, reward, terminated, truncated, info = env.step(action)
 
