@@ -1,7 +1,7 @@
 ## Zack
 
 Why would you need Isaac when you've got Zack?
-This is a low-effort side project to spend some time with RL and tools that are common in industry that I don't use in my google corp stack. 
+This is a low-effort side project, adjust expectations accordingly. 
 
 ## Configuring Local Environment
 I was using python 3.12.3.
