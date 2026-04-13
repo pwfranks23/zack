@@ -139,6 +139,45 @@ def handle_mouse_interactions(environment: gym.Env) -> bool:
   return False
 
 
+def describe_termination_cause(environment: gym.Env) -> str:
+  """Describe why the CartPole episode terminated.
+
+  Args:
+    environment: CartPole environment.
+
+  Returns:
+    Human-readable description of threshold violation.
+  """
+  cart_pos, cart_vel, pole_angle, pole_ang_vel = environment.unwrapped.state
+  x_threshold = environment.unwrapped.x_threshold
+  theta_threshold = environment.unwrapped.theta_threshold_radians
+
+  cart_out_of_bounds = abs(cart_pos) > x_threshold
+  pole_out_of_bounds = abs(pole_angle) > theta_threshold
+
+  if cart_out_of_bounds and pole_out_of_bounds:
+    return (
+        "cart and pole thresholds exceeded "
+        f"(|x|={abs(cart_pos):.3f}>{x_threshold:.3f}, "
+        f"|theta|={abs(pole_angle):.3f}>{theta_threshold:.3f})"
+    )
+  if cart_out_of_bounds:
+    return (
+        "cart threshold exceeded "
+        f"(|x|={abs(cart_pos):.3f}>{x_threshold:.3f})"
+    )
+  if pole_out_of_bounds:
+    return (
+        "pole angle threshold exceeded "
+        f"(|theta|={abs(pole_angle):.3f}>{theta_threshold:.3f})"
+    )
+  return (
+      "terminated without direct threshold match "
+      f"(x={cart_pos:.3f}, x_dot={cart_vel:.3f}, "
+      f"theta={pole_angle:.3f}, theta_dot={pole_ang_vel:.3f})"
+  )
+
+
 def main() -> None:
   """Run interactive CartPole demo."""
   environment = gym.make(
@@ -152,22 +191,31 @@ def main() -> None:
   print(f"Starting observation: {observation}")
   print("Left-click in the render window to inject a disturbance.")
 
-  episode_over = False
   user_quit = False
+  episode_idx = 1
   total_reward = 0.0
 
-  while not episode_over and not user_quit:
+  while not user_quit:
     action = choose_action(policy, observation)
     observation, reward, terminated, truncated, info = environment.step(action)
 
     user_quit = handle_mouse_interactions(environment)
 
     total_reward += reward
-    episode_over = terminated or truncated
     if terminated:
-      print(f'Episode terminated: pole fell too far or cart was too far from center.')
+      cause = describe_termination_cause(environment)
+      print(f"Episode {episode_idx} terminated: {cause}")
+    if terminated or truncated:
+      end_reason = "terminated" if terminated else "truncated"
+      print(
+          f"Episode {episode_idx} finished ({end_reason}). "
+          f"Reward: {total_reward:.1f}"
+      )
+      episode_idx += 1
+      total_reward = 0.0
+      observation, info = environment.reset()
 
-  print(f"Episode finished! Total reward: {total_reward}")
+  print("Demo ended by user quit.")
   environment.close()
 
 
