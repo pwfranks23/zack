@@ -3,3 +3,5 @@ pygame
 torch
 numpy
 mlflow
+onnx
+onnxscript
