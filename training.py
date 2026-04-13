@@ -124,6 +124,8 @@ def train(
     optimizer: Optimizer for model parameters.
     config: Training configuration.
   """
+  # TODO(patrick): Explore disturbance-based augmentation during training
+  # to improve recovery robustness (and track settings in MLflow).
   tracking_dir = Path("mlruns").resolve()
   tracking_dir.mkdir(parents=True, exist_ok=True)
   mlflow.set_tracking_uri(tracking_dir.as_uri())
